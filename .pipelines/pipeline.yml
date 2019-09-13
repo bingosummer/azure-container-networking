@@ -1,0 +1,102 @@
+pr:
+- master
+
+trigger:
+  branches:
+    include:
+    - master
+
+jobs:
+- job: Test
+  pool:
+    vmImage: 'Ubuntu-16.04' 
+
+  # Go setup for the vmImage:
+  # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/linux/scripts/installers/go.sh
+  variables:
+    GOBIN:  '$(GOPATH)/bin' # Go binaries path
+    GOPATH: '$(System.DefaultWorkingDirectory)/gopath' # Go workspace path
+    modulePath: '$(GOPATH)/src/github.com/Azure/azure-container-networking' # $(build.repository.name)' # Path to the module's code
+
+  steps:
+  - script: |
+      echo $UID
+      sudo apt-get update
+      sudo apt-get install -y ebtables ipset python3-dev gcc zip
+      sudo pip install coverage
+    displayName: 'Install OS dependencies'
+
+  - script: |
+      go version
+      go env
+      mkdir -p '$(GOBIN)'
+      mkdir -p '$(GOPATH)/pkg'
+      mkdir -p '$(modulePath)'
+      shopt -s extglob
+      shopt -s dotglob
+      mv !(gopath) '$(modulePath)'
+      echo '##vso[task.prependpath]$(GOBIN)'
+      echo '##vso[task.prependpath]$(GOROOT)/bin'
+    displayName: 'Set up the Go workspace'
+
+  - script: |
+      go get -v -t -d ./...
+      if [ -f Gopkg.toml ]; then
+          curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+          dep ensure
+      fi
+      go get github.com/docker/libnetwork/driverapi
+      go get github.com/gorilla/mux
+      go get github.com/jstemmer/go-junit-report
+      go get github.com/axw/gocov/gocov
+      go get github.com/AlekSi/gocov-xml
+      go get -u gopkg.in/matm/v1/gocov-html
+    workingDirectory: '$(modulePath)'
+    displayName: 'Install Go dependencies'
+
+  - script: |
+      set -o pipefail
+      set -e
+      sudo -E env "PATH=$PATH" make test-all 2>&1 | tee >(go-junit-report > report.xml)
+      bash <(curl -s https://codecov.io/bash)
+      gocov convert coverage.out > coverage.json
+      gocov-xml < coverage.json > coverage.xml
+    workingDirectory: '$(modulePath)'
+    displayName: 'RunTest'
+
+  - task: PublishTestResults@2
+    inputs:
+      testRunner: JUnit
+      testResultsFiles: $(System.DefaultWorkingDirectory)/**/report.xml
+    condition: always()
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura 
+      summaryFileLocation: $(System.DefaultWorkingDirectory)/**/coverage.xml
+    condition: always()
+
+  - script: |
+      export GOOS=linux
+      sudo -E env "PATH=$PATH" make all-binaries
+      export GOOS=windows
+      sudo -E env "PATH=$PATH" make all-binaries
+      cd output 
+      sudo find . -mindepth 2 -type f -print -exec mv {} . \;
+      sudo rm -R -- */
+      sudo find . -type f -regextype posix-extended ! -iregex '.*\.(zip|tgz)$' -delete
+    workingDirectory: '$(modulePath)'
+    displayName: 'Build'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: '$(modulePath)/output'
+      targetFolder: $(Build.ArtifactStagingDirectory)
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      artifactName: 'output'
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
