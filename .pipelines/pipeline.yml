@@ -19,14 +19,14 @@ jobs:
     modulePath: '$(GOPATH)/src/github.com/Azure/azure-container-networking' # $(build.repository.name)' # Path to the module's code
 
   steps:
-  - script: |
+  - bash: |
       echo $UID
       sudo apt-get update
       sudo apt-get install -y ebtables ipset python3-dev gcc zip
       sudo pip install coverage
     displayName: 'Install OS dependencies'
 
-  - script: |
+  - bash: |
       go version
       go env
       mkdir -p '$(GOBIN)'
@@ -39,7 +39,7 @@ jobs:
       echo '##vso[task.prependpath]$(GOROOT)/bin'
     displayName: 'Set up the Go workspace'
 
-  - script: |
+  - bash: |
       go get -v -t -d ./...
       if [ -f Gopkg.toml ]; then
           curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
@@ -54,17 +54,39 @@ jobs:
     workingDirectory: '$(modulePath)'
     displayName: 'Install Go dependencies'
 
-  - script: |
-      set -o pipefail
-      set -e
-      # run test, echo exit status code to fd 3, pipe output from test to tee, which splits output to stdout and go-junit-report (which converts test output to report.xml), stdout from tee is redirected to fd 4. Take output written to fd 3 (which is the exit code of test), redirect to a subshell stdout, pipe to read from stdout then exit with that status code. Read all output from fd 4 (output from tee) and write to top shell stdout
-      ((((sudo -E env "PATH=$PATH" make test-all; echo $? >&3) | tee >(go-junit-report > report.xml) >&4) 3>&1) | (read xs; exit $xs)) 4>&1
+  - bash: |
+      export GOOS=linux
+      sudo -E env "PATH=$PATH" make all-binaries
+      export GOOS=windows
+      sudo -E env "PATH=$PATH" make all-binaries
+      cd output 
+      sudo find . -mindepth 2 -type f -print -exec mv {} . \;
+      sudo rm -R -- */
+      sudo find . -type f -regextype posix-extended ! -iregex '.*\.(zip|tgz)$' -delete
+    workingDirectory: '$(modulePath)'
+    displayName: 'Build'
+
+  - bash: |
+      # run test, echo exit status code to fd 3, pipe output from test to tee, which splits output to stdout and go-junit-report (which converts test output to report.xml), stdout from tee is redirected to fd 4. Take output written to fd 3 (which is the exit code of test), redirect to stdout, pipe to read from stdout then exit with that status code. Read all output from fd 4 (output from tee) and write to top stdout
+      { { { { 
+            sudo -E env "PATH=$PATH" make test-all; 
+            echo $? >&3; 
+            } | tee > go-junit-report > report.xml >&4; 
+          } 3>&1; 
+        } | { read xs; exit $xs; } 
+      } 4>&1
+    workingDirectory: '$(modulePath)'
+    failOnStderr: true
+    displayName: 'Run Tests'
+
+  - bash: | 
       bash <(curl -s https://codecov.io/bash)
       gocov convert coverage.out > coverage.json
       gocov-xml < coverage.json > coverage.xml
     workingDirectory: '$(modulePath)'
-    displayName: 'RunTest'
-
+    displayName: 'Generate Coverage Reports'
+    condition: always()
+    
   - task: PublishTestResults@2
     inputs:
       testRunner: JUnit
@@ -76,19 +98,6 @@ jobs:
       codeCoverageTool: Cobertura 
       summaryFileLocation: $(System.DefaultWorkingDirectory)/**/coverage.xml
     condition: always()
-
-  - script: |
-      export GOOS=linux
-      sudo -E env "PATH=$PATH" make all-binaries
-      export GOOS=windows
-      sudo -E env "PATH=$PATH" make all-binaries
-      cd output 
-      sudo find . -mindepth 2 -type f -print -exec mv {} . \;
-      sudo rm -R -- */
-      sudo find . -type f -regextype posix-extended ! -iregex '.*\.(zip|tgz)$' -delete
-    workingDirectory: '$(modulePath)'
-    displayName: 'Build'
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
   - task: CopyFiles@2
     inputs:
