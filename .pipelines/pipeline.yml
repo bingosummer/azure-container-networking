@@ -71,7 +71,7 @@ jobs:
       { { { { 
             sudo -E env "PATH=$PATH" make test-all; 
             echo $? >&3; 
-            } | tee > go-junit-report > report.xml >&4; 
+            } | tee >(go-junit-report > report.xml) >&4; 
           } 3>&1; 
         } | { read xs; exit $xs; } 
       } 4>&1
