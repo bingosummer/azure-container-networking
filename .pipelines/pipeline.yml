@@ -7,7 +7,7 @@ trigger:
     - master
 
 jobs:
-- job: Build and run Unit Tests
+- job: UnitTest
   pool:
     name: Networking-ContainerNetworking
     demands: agent.os -equals Linux
