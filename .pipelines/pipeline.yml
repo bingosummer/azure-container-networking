@@ -7,9 +7,10 @@ trigger:
     - master
 
 jobs:
-- job: Test
+- job: Build and run Unit Tests
   pool:
-    vmImage: 'Ubuntu-16.04' 
+    name: Networking-ContainerNetworking
+    demands: agent.os -equals Linux
 
   # Go setup for the vmImage:
   # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/linux/scripts/installers/go.sh
