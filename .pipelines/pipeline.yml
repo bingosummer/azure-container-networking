@@ -12,7 +12,9 @@ jobs:
       name: Networking-ContainerNetworking
       demands: agent.os -equals Linux
 
-    container: golang:1.12
+    container:
+      image: containernetworking/pipeline-ci:1.0
+      options: "--privileged"
 
     # Go setup for the vmImage:
     # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/linux/scripts/installers/go.sh
@@ -22,13 +24,6 @@ jobs:
       modulePath: "$(GOPATH)/src/github.com/Azure/azure-container-networking" # $(build.repository.name)' # Path to the module's code
 
     steps:
-      - bash: |
-          echo $UID
-          sudo apt-get update
-          sudo apt-get install -y ebtables ipset python3-dev gcc zip
-          sudo pip install coverage
-        displayName: "Install OS dependencies"
-
       - bash: |
           go version
           go env
@@ -41,20 +36,6 @@ jobs:
           echo '##vso[task.prependpath]$(GOBIN)'
           echo '##vso[task.prependpath]$(GOROOT)/bin'
         displayName: "Set up the Go workspace"
-
-      - bash: |
-          go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-          fi
-          go get github.com/docker/libnetwork/driverapi
-          go get github.com/gorilla/mux
-          go get github.com/jstemmer/go-junit-report
-          go get github.com/axw/gocov/gocov
-          go get github.com/AlekSi/gocov-xml
-          go get -u gopkg.in/matm/v1/gocov-html
-        workingDirectory: "$(modulePath)"
-        displayName: "Install Go dependencies"
 
       - bash: |
           sudo rm /run/docker/plugins/test.sock || true
