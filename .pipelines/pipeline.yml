@@ -36,7 +36,6 @@ jobs:
       shopt -s extglob
       shopt -s dotglob
       mv !(gopath) '$(modulePath)'
-      sudo rm /run/docker/plugins/test.sock
       echo '##vso[task.prependpath]$(GOBIN)'
       echo '##vso[task.prependpath]$(GOROOT)/bin'
     displayName: 'Set up the Go workspace'
@@ -87,6 +86,13 @@ jobs:
       gocov-xml < coverage.json > coverage.xml
     workingDirectory: '$(modulePath)'
     displayName: 'Generate Coverage Reports'
+    condition: always()
+
+  - bash: | 
+      sudo rm /run/docker/plugins/test.sock
+      sudo ip link del dev dummy
+    workingDirectory: '$(modulePath)'
+    displayName: 'Test cleanup'
     condition: always()
     
   - task: PublishTestResults@2
