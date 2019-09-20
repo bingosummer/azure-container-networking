@@ -13,7 +13,7 @@ jobs:
       demands: agent.os -equals Linux
 
     container:
-      image: containernetworking/pipeline-ci:1.0.1
+      image: containernetworking/pipeline-ci:1.0.2
       options: "--privileged"
 
     # Go setup for the vmImage:
