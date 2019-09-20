@@ -55,6 +55,13 @@ jobs:
     workingDirectory: '$(modulePath)'
     displayName: 'Install Go dependencies'
 
+  - bash: | 
+      sudo rm /run/docker/plugins/test.sock || true
+      sudo ip link del dev dummy || true
+    workingDirectory: '$(modulePath)'
+    displayName: 'Workspace setup'
+    condition: always()
+
   - bash: |
       export GOOS=linux
       make all-binaries
