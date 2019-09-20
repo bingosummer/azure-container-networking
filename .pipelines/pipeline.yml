@@ -12,6 +12,8 @@ jobs:
       name: Networking-ContainerNetworking
       demands: agent.os -equals Linux
 
+    container: golang:1.12
+
     # Go setup for the vmImage:
     # https://github.com/Microsoft/azure-pipelines-image-generation/blob/master/images/linux/scripts/installers/go.sh
     variables:
