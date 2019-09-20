@@ -87,13 +87,6 @@ jobs:
     workingDirectory: '$(modulePath)'
     displayName: 'Generate Coverage Reports'
     condition: always()
-
-  - bash: | 
-      sudo rm /run/docker/plugins/test.sock
-      sudo ip link del dev dummy
-    workingDirectory: '$(modulePath)'
-    displayName: 'Test cleanup'
-    condition: always()
     
   - task: PublishTestResults@2
     inputs:
