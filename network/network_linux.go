@@ -271,7 +271,7 @@ func (nm *networkManager) applyIPConfig(extIf *externalInterface, targetIf *net.
 func applyDnsConfig(extIf *externalInterface, ifName string) error {
 	var err error
 
-	if(extIf != nil && len(extIf.DNSInfo.Servers) > 0) {
+	if extIf != nil && len(extIf.DNSInfo.Servers) > 0 {
 		cmd := fmt.Sprintf("systemd-resolve --interface=%s --set-dns=%s", ifName, extIf.DNSInfo.Servers[0])
 		_, err = platform.ExecuteCommand(cmd)
 		if err != nil {
