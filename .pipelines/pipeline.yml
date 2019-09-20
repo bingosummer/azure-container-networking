@@ -58,9 +58,9 @@ jobs:
 
   - bash: |
       export GOOS=linux
-      sudo -E env "PATH=$PATH" make all-binaries
+      make all-binaries
       export GOOS=windows
-      sudo -E env "PATH=$PATH" make all-binaries
+      make all-binaries
       cd output 
       sudo find . -mindepth 2 -type f -regextype posix-extended ! -iregex '.*\.(zip|tgz)$' -delete
       sudo find . -mindepth 2 -type f -print -exec mv {} . \;
