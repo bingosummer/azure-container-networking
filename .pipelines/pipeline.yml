@@ -46,7 +46,7 @@ jobs:
       - script: |
           BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [[ "$BRANCH" == "master" ]]; then
-            echo '##vso[task.setvariable variable=TAG;isOutput=true]testmaster'
+            echo "##vso[task.setvariable variable=myOutputVar;isOutput=true]this is the $BRANCH value"
             echo "Set tag to $(git describe --tags --abbrev=0)"
           else
             echo '##vso[task.setvariable variable=TAG;isOutput=true]test'
@@ -55,6 +55,9 @@ jobs:
         workingDirectory: "$(modulePath)"
         displayName: "EnvironmentalVariables"
         condition: always()
+
+      - script: echo $(EnvironmentalVariables.myOutputVar)
+        name: echovar
 
       - script: |
           go get -v -t -d ./...
@@ -83,10 +86,6 @@ jobs:
         workingDirectory: "$(modulePath)"
         displayName: "Build"
 
-      - script: echo "##vso[task.setvariable variable=myOutputVar;isOutput=true]this is the $(configuration) value"
-        name: setvarStep
-      - script: echo $(setvarStep.myOutputVar)
-        name: echovar
 
       - bash: |
           # run test, echo exit status code to fd 3, pipe output from test to tee, which splits output to stdout and go-junit-report (which converts test output to report.xml), stdout from tee is redirected to fd 4. Take output written to fd 3 (which is the exit code of test), redirect to stdout, pipe to read from stdout then exit with that status code. Read all output from fd 4 (output from tee) and write to top stdout
