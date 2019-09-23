@@ -137,7 +137,7 @@ jobs:
       name: Networking-ContainerNetworking
       demands: agent.os -equals Linux
     variables:
-      Tag: $[ dependencies.Unit_Tests.outputs['VERSION=$(EnvironmentalVariables.Tag)'] ] 
+      Tag: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.Tag'] ] 
     steps:
     - script: echo $(Tag)
       name: echovar
