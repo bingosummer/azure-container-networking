@@ -7,7 +7,7 @@ trigger:
       - master
 
 jobs:
-  - job: UnitTest
+  - job: Unit_Tests
     pool:
       name: Networking-ContainerNetworking
       demands: agent.os -equals Linux
@@ -24,11 +24,25 @@ jobs:
       modulePath: "$(GOPATH)/src/github.com/Azure/azure-container-networking" # $(build.repository.name)' # Path to the module's code
 
     steps:
+
+      - bash: |
+          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [[ "$BRANCH" == "master" ]]; then
+            echo "##vso[task.setvariable variable=myOutputVar=Tag;]$(git describe --tags --abbrev=0)"
+          else
+            echo "##vso[task.setvariable variable=myOutputVar=Tag;]$(git describe --tags --always --dirty)"
+          fi
+        workingDirectory: "$(modulePath)"
+        displayName: "EnvironmentalVariables"
+        condition: always()
+
       - bash: |
           echo $UID
           sudo apt-get install -y ebtables ipset python3-dev gcc zip iptables ipset
           sudo pip install coverage
-        displayName: "Install OS dependencies"
+          sudo rm /run/docker/plugins/test.sock || true
+          sudo ip link del dev dummy || true
+        displayName: "Set up OS environment"
 
       - bash: |
           go version
@@ -58,17 +72,10 @@ jobs:
         displayName: "Install Go dependencies"
 
       - bash: |
-          sudo rm /run/docker/plugins/test.sock || true
-          sudo ip link del dev dummy || true
-        workingDirectory: "$(modulePath)"
-        displayName: "Workspace setup"
-        condition: always()
-
-      - bash: |
           export GOOS=linux
-          make all-binaries
+          make all-binaries VERSION=$(EnvironmentalVariables.Tag)
           export GOOS=windows
-          make all-binaries
+          make all-binaries VERSION=$(EnvironmentalVariables.Tag)
           cd output 
           sudo find . -mindepth 2 -type f -regextype posix-extended ! -iregex '.*\.(zip|tgz)$' -delete
           sudo find . -mindepth 2 -type f -print -exec mv {} . \;
@@ -120,3 +127,14 @@ jobs:
           artifactName: "output"
           pathtoPublish: "$(Build.ArtifactStagingDirectory)"
         condition: succeeded()
+
+  - job: E2E_Tests
+    dependsOn: Unit_Tests
+    pool:
+      name: Networking-ContainerNetworking
+      demands: agent.os -equals Linux
+    variables:
+      Tag: $[ dependencies.Unit_Tests.outputs['VERSION=$(EnvironmentalVariables.Tag)'] ] 
+    steps:
+    - script: echo $(Tag)
+      name: echovar
