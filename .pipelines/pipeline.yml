@@ -75,11 +75,11 @@ jobs:
         displayName: "Install Go dependencies"
 
       - script: |
-          echo Build tag is $TAG
+          echo Build tag is $(EnvironmentalVariables.Tag)
           export GOOS=linux
-          make all-binaries VERSION=$TAG
+          make all-binaries VERSION=$(EnvironmentalVariables.Tag)
           export GOOS=windows
-          make all-binaries VERSION=$TAG
+          make all-binaries VERSION=$(EnvironmentalVariables.Tag)
           cd output 
           sudo find . -mindepth 2 -type f -regextype posix-extended ! -iregex '.*\.(zip|tgz)$' -delete
           sudo find . -mindepth 2 -type f -print -exec mv {} . \;
@@ -135,13 +135,20 @@ jobs:
           pathtoPublish: "$(Build.ArtifactStagingDirectory)"
         condition: succeeded()
 
-      - task: AzureFileCopy@3
+      - task: AzureCLI@1
         inputs:
-          SourcePath: '$(modulePath)/output'
           azureSubscription: $(ARTIFACT_SUBSCRIPTION)
-          Destination: 'AzureBlob'
-          storage: $(ARTIFACT_STORAGE)
-          ContainerName: $(EnvironmentalVariables.Tag)
+          scriptLocation: 'inlineScript'
+          inlineScript: 'az storage container create -n acn-$(EnvironmentalVariables.Tag) --account-name $(STORAGE_ACCOUNT_NAME) --public-access container'
+          workingDirectory: '$(modulePath)'
+        displayName: Create artifact storage container
+
+      - task: AzureCLI@1
+        inputs:
+          azureSubscription: $(ARTIFACT_SUBSCRIPTION)
+          scriptLocation: 'inlineScript'
+          inlineScript: 'az storage blob upload-batch -d acn-$(EnvironmentalVariables.Tag) -s output/ --pattern * --account-name $(STORAGE_ACCOUNT_NAME)'
+          workingDirectory: '$(modulePath)'
 
   - job: E2E_Tests
     displayName: AKS-Engine E2E Tests
