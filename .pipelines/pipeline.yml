@@ -45,7 +45,7 @@ jobs:
           echo '##vso[task.prependpath]$(GOROOT)/bin'
         displayName: "Set up the Go environment"
 
-      - bash: |
+      - script: |
           BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [[ "$BRANCH" == "master" ]]; then
             echo '##vso[task.setvariable variable=Tag;isOutput=true]$(git describe --tags --abbrev=0)'
@@ -58,7 +58,7 @@ jobs:
         displayName: "EnvironmentalVariables"
         condition: always()
 
-      - bash: |
+      - script: |
           go get -v -t -d ./...
           if [ -f Gopkg.toml ]; then
               curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
@@ -72,8 +72,8 @@ jobs:
         workingDirectory: "$(modulePath)"
         displayName: "Install Go dependencies"
 
-      - bash: |
-          echo $(EnvironmentalVariables.Tag)
+      - script: |
+          echo Build tag is $(EnvironmentalVariables.Tag)
           export GOOS=linux
           make all-binaries VERSION=$(EnvironmentalVariables.Tag)
           export GOOS=windows
