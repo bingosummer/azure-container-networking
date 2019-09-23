@@ -26,17 +26,6 @@ jobs:
     steps:
 
       - bash: |
-          BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          if [[ "$BRANCH" == "master" ]]; then
-            echo "##vso[task.setvariable variable=myOutputVar=Tag;]$(git describe --tags --abbrev=0)"
-          else
-            echo "##vso[task.setvariable variable=myOutputVar=Tag;]$(git describe --tags --always --dirty)"
-          fi
-        workingDirectory: "$(modulePath)"
-        displayName: "EnvironmentalVariables"
-        condition: always()
-
-      - bash: |
           echo $UID
           sudo apt-get install -y ebtables ipset python3-dev gcc zip iptables ipset
           sudo pip install coverage
@@ -55,7 +44,18 @@ jobs:
           mv !(gopath) '$(modulePath)'
           echo '##vso[task.prependpath]$(GOBIN)'
           echo '##vso[task.prependpath]$(GOROOT)/bin'
-        displayName: "Set up the Go workspace"
+        displayName: "Set up the Go environment"
+
+      - bash: |
+          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [[ "$BRANCH" == "master" ]]; then
+            echo "##vso[task.setvariable variable=myOutputVar=Tag;]$(git describe --tags --abbrev=0)"
+          else
+            echo "##vso[task.setvariable variable=myOutputVar=Tag;]$(git describe --tags --always --dirty)"
+          fi
+        workingDirectory: "$(modulePath)"
+        displayName: "EnvironmentalVariables"
+        condition: always()
 
       - bash: |
           go get -v -t -d ./...
