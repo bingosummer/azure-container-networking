@@ -26,8 +26,6 @@ jobs:
     steps:
       - bash: |
           echo $UID
-          sudo apt-get install -y ebtables ipset python3-dev gcc zip iptables ipset
-          sudo pip install coverage
           sudo rm /run/docker/plugins/test.sock || true
           sudo ip link del dev dummy || true
         displayName: "Set up OS environment"
@@ -48,10 +46,10 @@ jobs:
       - script: |
           BRANCH=$(git rev-parse --abbrev-ref HEAD)
           if [[ "$BRANCH" == "master" ]]; then
-            echo '##vso[task.setvariable variable=Tag;isOutput=true]testmaster'
+            echo '##vso[task.setvariable variable=TAG;isOutput=true]testmaster'
             echo "Set tag to $(git describe --tags --abbrev=0)"
           else
-            echo '##vso[task.setvariable variable=Tag;isOutput=true]test'
+            echo '##vso[task.setvariable variable=TAG;isOutput=true]test'
             echo "Set tag to $(git describe --tags --always --dirty)"
           fi
         workingDirectory: "$(modulePath)"
@@ -73,11 +71,11 @@ jobs:
         displayName: "Install Go dependencies"
 
       - script: |
-          echo Build tag is $(EnvironmentalVariables.Tag)
+          echo Build tag is $TAG
           export GOOS=linux
-          make all-binaries VERSION=$(EnvironmentalVariables.Tag)
+          make all-binaries VERSION=$TAG
           export GOOS=windows
-          make all-binaries VERSION=$(EnvironmentalVariables.Tag)
+          make all-binaries VERSION=$TAG
           cd output 
           sudo find . -mindepth 2 -type f -regextype posix-extended ! -iregex '.*\.(zip|tgz)$' -delete
           sudo find . -mindepth 2 -type f -print -exec mv {} . \;
