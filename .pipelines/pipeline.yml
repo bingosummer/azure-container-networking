@@ -42,6 +42,7 @@ jobs:
           mv !(gopath) '$(modulePath)'
           echo '##vso[task.prependpath]$(GOBIN)'
           echo '##vso[task.prependpath]$(GOROOT)/bin'
+        name: "GoEnv"
         displayName: "Set up the Go environment"
 
       - script: |
@@ -55,10 +56,8 @@ jobs:
           fi
         workingDirectory: "$(modulePath)"
         name: "EnvironmentalVariables"
+        displayName: "Set build environmental variables"
         condition: always()
-
-      - script: echo $(EnvironmentalVariables.Tag)
-        name: echovar
 
       - script: |
           go get -v -t -d ./...
@@ -108,7 +107,7 @@ jobs:
           gocov convert coverage.out > coverage.json
           gocov-xml < coverage.json > coverage.xml
         workingDirectory: "$(modulePath)"
-        name: "Test"
+        name: "Coverage"
         displayName: "Generate Coverage Reports"
         condition: always()
 
