@@ -74,6 +74,7 @@ jobs:
         displayName: "Install Go dependencies"
 
       - bash: |
+          echo "Using tag $(EnvironmentalVariables.Tag)"
           export GOOS=linux
           make all-binaries VERSION=$(EnvironmentalVariables.Tag)
           export GOOS=windows
