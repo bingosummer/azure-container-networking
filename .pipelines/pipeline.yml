@@ -186,7 +186,8 @@ stages:
         - bash: |
             git clone https://github.com/Azure/aks-engine
             cd aks-engine
-            sudo docker run --rm -v /var/lib/jenkins/workspace/k8s-linux-github:/go/src/github.com/Azure/aks-engine -w /go/src/github.com/Azure/aks-engine -e CLUSTER_DEFINITION=./cniLinux.json -e ORCHESTRATOR=kubernetes -e CREATE_VNET=false -e TIMEOUT=10m -e CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) -e CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) -e TENANT_ID=$(AKS_ENGINE_TENANT_ID) -e SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) -e CLEANUP_ON_EXIT=true -e REGIONS=$(AKS_ENGINE_REGION) -e IS_JENKINS=false quay.io/deis/go-dev:latest make test-kubernetes
+            make bootstrap
+            CLUSTER_DEFINITION=./cniLinux.json ORCHESTRATOR=kubernetes CREATE_VNET=false TIMEOUT=10m CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) TENANT_ID=$(AKS_ENGINE_TENANT_ID) SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) CLEANUP_ON_EXIT=true REGIONS=$(AKS_ENGINE_REGION) IS_JENKINS=false make test-kubernetes
           name: DeployAKSEngine
           displayName: Deploy AKS Engine
 
