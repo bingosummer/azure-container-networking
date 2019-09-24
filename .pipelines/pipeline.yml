@@ -148,7 +148,7 @@ jobs:
         inputs:
           azureSubscription: $(ARTIFACT_SUBSCRIPTION)
           scriptLocation: 'inlineScript'
-          inlineScript: 'az storage blob upload-batch -d acn-$(EnvironmentalVariables.CommitHash) -s output/ --pattern * --account-name $(STORAGE_ACCOUNT_NAME)'
+          inlineScript: 'az storage blob upload-batch -d acn-$(EnvironmentalVariables.CommitHash) -s ./output/  --account-name $(STORAGE_ACCOUNT_NAME)'
           workingDirectory: '$(modulePath)'
 
   - job: E2E_Tests
