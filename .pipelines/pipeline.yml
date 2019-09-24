@@ -157,11 +157,36 @@ stages:
           demands: agent.os -equals Linux
         variables:
           Tag: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.Tag'] ] 
+          CommitHash: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.CommitHash'] ] 
         steps:
         - script: echo $(Tag)
           name: echovar1
+
         - script: echo $(myVarFromJobADebug)
           name: echovar
+
+        - bash: |
+            curl -o get-akse.sh https://raw.githubusercontent.com/Azure/aks-engine/master/scripts/get-akse.sh
+            chmod 700 get-akse.sh
+            ./get-akse.sh
+          name: AKSEngine
+          displayName: Install AKS-Engine
+
+        - bash: |
+            rm -f cniLinux.json*
+            wget https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json
+            export LINUX_CNI_URL='"'https://acnjenkinsstorage.blob.core.windows.net/acn-$(CommitHash)/azure-vnet-cni-linux-amd64-$(Tag).tgz'"'
+            sed -i "s|\"azureCNIURLLinux\":\".*\"|\"azureCNIURLLinux\":"$LINUX_CNI_URL"|g" cniLinux.json
+            sed -i "s|\"azureCNIVersion\":\".*\"|\"azureCNIVersion\":\"$GIT_TAG\"|g" cniLinux.json
+            echo "Running E2E tests against a cluster built with the following API model:"
+            cat ./cniLinux.json
+          name: ConfigureAKSEngine
+          displayName: Configure AKS-Engine
+
+        - bash: |
+            sudo docker run --rm -v /var/lib/jenkins/workspace/k8s-linux-github:/go/src/github.com/Azure/aks-engine -w /go/src/github.com/Azure/aks-engine -e CLUSTER_DEFINITION=./cniLinux.json -e ORCHESTRATOR=kubernetes -e CREATE_VNET=false -e TIMEOUT=10m -e CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) -e CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) -e TENANT_ID=$(AKS_ENGINE_TENANT_ID) -e SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) -e CLEANUP_ON_EXIT=true -e REGIONS=$(AKS_ENGINE_REGION) -e IS_JENKINS=false quay.io/deis/go-dev:latest make test-kubernetes
+          name: DeployAKSEngine
+          displayName: Deploy AKS Engine
 
 
       - job: Cleanup
