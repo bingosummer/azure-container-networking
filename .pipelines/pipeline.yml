@@ -159,38 +159,45 @@ stages:
           image: containernetworking/pipeline-ci:1.0.4
         variables:
           GOPATH: "$(System.DefaultWorkingDirectory)/gopath"
-          AKS_Engine: github.com/Azure/aks-engine
+          GOBIN: "$(GOPATH)/bin" # Go binaries path
+          AKS_Engine: "github.com/Azure/aks-engine"
+          modulePath: "$(GOPATH)/src/github.com/Azure/aks-engine"
           Tag: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.Tag'] ] 
           CommitHash: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.CommitHash'] ] 
+
         steps:
-        - script: echo $(Tag)
-          name: echovar1
+          - bash: |
+              curl -o get-akse.sh https://raw.githubusercontent.com/Azure/aks-engine/master/scripts/get-akse.sh
+              chmod 700 get-akse.sh
+              ./get-akse.sh
+            name: AKSEngine
+            displayName: Install AKS-Engine
 
-        - script: echo $(myVarFromJobADebug)
-          name: echovar
+          - bash: |
+              go version
+              go env
+              mkdir -p '$(GOBIN)'
+              mkdir -p '$(GOPATH)/pkg'
+              mkdir -p '$(modulePath)'
+              echo '##vso[task.prependpath]$(GOBIN)'
+              echo '##vso[task.prependpath]$(GOROOT)/bin'
+            name: "GoEnv"
+            displayName: "Set up the Go environment"
 
-        - bash: |
-            curl -o get-akse.sh https://raw.githubusercontent.com/Azure/aks-engine/master/scripts/get-akse.sh
-            chmod 700 get-akse.sh
-            ./get-akse.sh
-          name: AKSEngine
-          displayName: Install AKS-Engine
-
-        - bash: |
-            go get $(AKS_ENGINE)
-            cd $(GOPATH)/src/$(AKS_ENGINE)
-            go get ./...
-            rm -f cniLinux.json*
-            wget https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json
-            export LINUX_CNI_URL='"'https://acnjenkinsstorage.blob.core.windows.net/acn-$(CommitHash)/azure-vnet-cni-linux-amd64-$(Tag).tgz'"'
-            sed -i "s|\"azureCNIURLLinux\":\".*\"|\"azureCNIURLLinux\":"$LINUX_CNI_URL"|g" cniLinux.json
-            sed -i "s|\"azureCNIVersion\":\".*\"|\"azureCNIVersion\":\"$GIT_TAG\"|g" cniLinux.json
-            echo "Running E2E tests against a cluster built with the following API model:"
-            cat ./cniLinux.json
-            make bootstrap
-            CLUSTER_DEFINITION=./cniLinux.json ORCHESTRATOR=kubernetes CREATE_VNET=false TIMEOUT=10m CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) TENANT_ID=$(AKS_ENGINE_TENANT_ID) SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) CLEANUP_ON_EXIT=true REGIONS=$(AKS_ENGINE_REGION) IS_JENKINS=false make test-kubernetes
-          name: DeployAKSEngine
-          displayName: Deploy AKS Engine
+          - bash: |
+              go get $(AKS_ENGINE)
+              rm -f cniLinux.json*
+              wget https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json
+              export LINUX_CNI_URL='"'https://acnjenkinsstorage.blob.core.windows.net/acn-$(CommitHash)/azure-vnet-cni-linux-amd64-$(Tag).tgz'"'
+              sed -i "s|\"azureCNIURLLinux\":\".*\"|\"azureCNIURLLinux\":"$LINUX_CNI_URL"|g" cniLinux.json
+              sed -i "s|\"azureCNIVersion\":\".*\"|\"azureCNIVersion\":\"$GIT_TAG\"|g" cniLinux.json
+              echo "Running E2E tests against a cluster built with the following API model:"
+              cat ./cniLinux.json
+              make bootstrap
+              CLUSTER_DEFINITION=./cniLinux.json ORCHESTRATOR=kubernetes CREATE_VNET=false TIMEOUT=10m CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) TENANT_ID=$(AKS_ENGINE_TENANT_ID) SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) CLEANUP_ON_EXIT=true REGIONS=$(AKS_ENGINE_REGION) IS_JENKINS=false make test-kubernetes
+            name: DeployAKSEngine
+            displayName: Deploy AKS Engine
+            workingDirectory: "$(modulePath)"
 
       - job: Cleanup
         displayName: Cleanup remote artifacts
