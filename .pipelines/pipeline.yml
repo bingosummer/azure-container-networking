@@ -143,18 +143,11 @@ stages:
             inputs:
               azureSubscription: $(ARTIFACT_SUBSCRIPTION)
               scriptLocation: 'inlineScript'
-              inlineScript: 'az storage container create -n acn-$(EnvironmentalVariables.CommitHash) --account-name $(STORAGE_ACCOUNT_NAME) --public-access container'
-
+              inlineScript: |
+                az storage container create -n acn-$(EnvironmentalVariables.CommitHash) --account-name $(STORAGE_ACCOUNT_NAME) --public-access container
+                az storage blob upload-batch -d acn-$(EnvironmentalVariables.CommitHash) -s ./output/  --account-name $(STORAGE_ACCOUNT_NAME)
               workingDirectory: '$(modulePath)'
             displayName: Create artifact storage container
-
-          - task: AzureCLI@1
-            inputs:
-              azureSubscription: $(ARTIFACT_SUBSCRIPTION)
-              scriptLocation: 'inlineScript'
-              inlineScript: 'az storage blob upload-batch -d acn-$(EnvironmentalVariables.CommitHash) -s ./output/  --account-name $(STORAGE_ACCOUNT_NAME)'
-              workingDirectory: '$(modulePath)'
-            displayName: Upload artifacts to Azure storage container
 
       - job: E2E_Tests
         displayName: AKS-Engine E2E Tests
@@ -191,6 +184,6 @@ stages:
               azureSubscription: $(ARTIFACT_SUBSCRIPTION)
               scriptLocation: 'inlineScript'
               inlineScript: |
-                'az storage container delete -n acn-$(EnvironmentalVariables.CommitHash) --account-name $(STORAGE_ACCOUNT_NAME)''
+                az storage container delete -n acn-$(CommitHash) --account-name $(STORAGE_ACCOUNT_NAME)
               workingDirectory: '$(modulePath)'
             displayName: Cleanup remote Azure storage container
