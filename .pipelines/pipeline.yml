@@ -185,15 +185,17 @@ stages:
             displayName: "Set up the Go environment"
 
           - bash: |
-              pwd
+              
               go get -v $(AKS_ENGINE)
               rm -f cniLinux.json*
               wget https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json
-              export LINUX_CNI_URL='"'https://acnjenkinsstorage.blob.core.windows.net/acn-$(CommitHash)/azure-vnet-cni-linux-amd64-$(Tag).tgz'"'
+              export LINUX_CNI_URL='"'https://$(ARTIFACT_STORAGE).blob.core.windows.net/acn-$(CommitHash)/azure-vnet-cni-linux-amd64-$(Tag).tgz'"'
               sed -i "s|\"azureCNIURLLinux\":\".*\"|\"azureCNIURLLinux\":"$LINUX_CNI_URL"|g" cniLinux.json
               sed -i "s|\"azureCNIVersion\":\".*\"|\"azureCNIVersion\":\"$GIT_TAG\"|g" cniLinux.json
               echo "Running E2E tests against a cluster built with the following API model:"
               cat ./cniLinux.json
+              pwd
+              ls
               make bootstrap
               CLUSTER_DEFINITION=./cniLinux.json ORCHESTRATOR=kubernetes CREATE_VNET=false TIMEOUT=10m CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) TENANT_ID=$(AKS_ENGINE_TENANT_ID) SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) CLEANUP_ON_EXIT=true REGIONS=$(AKS_ENGINE_REGION) IS_JENKINS=false make test-kubernetes
             name: DeployAKSEngine
