@@ -187,7 +187,8 @@ stages:
               echo "Running E2E tests against a cluster built with the following API model:"
               cat ./cniLinux.json
               pwd
-              ls
+              ls -lah
+              alias k=kubectl
               make bootstrap
               make build
               CLUSTER_DEFINITION=./cniLinux.json ORCHESTRATOR=kubernetes CREATE_VNET=false TIMEOUT=10m CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) TENANT_ID=$(AKS_ENGINE_TENANT_ID) SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) CLEANUP_ON_EXIT=true REGIONS=$(AKS_ENGINE_REGION) IS_JENKINS=false make test-kubernetes
