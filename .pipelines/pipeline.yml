@@ -188,6 +188,8 @@ stages:
               cat ./cniLinux.json
               pwd
               ls -lah
+              curl -L https://dl.k8s.io/v1.16.0/kubernetes-client-linux-amd64.tar.gz | tar xvzf -
+              sudo cp kubernetes/client/bin/kubectl /usr/local/bin/
               alias k=kubectl
               make bootstrap
               make build
