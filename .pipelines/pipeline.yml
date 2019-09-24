@@ -167,13 +167,6 @@ stages:
 
         steps:
           - bash: |
-              curl -o get-akse.sh https://raw.githubusercontent.com/Azure/aks-engine/master/scripts/get-akse.sh
-              chmod 700 get-akse.sh
-              ./get-akse.sh
-            name: AKSEngine
-            displayName: Install AKS-Engine
-
-          - bash: |
               go version
               go env
               go get -v $(AKS_ENGINE)
@@ -196,6 +189,7 @@ stages:
               pwd
               ls
               make bootstrap
+              make build
               CLUSTER_DEFINITION=./cniLinux.json ORCHESTRATOR=kubernetes CREATE_VNET=false TIMEOUT=10m CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) TENANT_ID=$(AKS_ENGINE_TENANT_ID) SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) CLEANUP_ON_EXIT=true REGIONS=$(AKS_ENGINE_REGION) IS_JENKINS=false make test-kubernetes
             name: DeployAKSEngine
             displayName: Deploy AKS Engine
