@@ -155,6 +155,8 @@ stages:
         pool:
           name: Networking-ContainerNetworking
           demands: agent.os -equals Linux
+        container:
+          image: containernetworking/pipeline-ci:1.0.4
         variables:
           Tag: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.Tag'] ] 
           CommitHash: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.CommitHash'] ] 
@@ -195,11 +197,11 @@ stages:
         pool:
           name: Networking-ContainerNetworking
           demands: agent.os -equals Linux
+        container:
+          image: containernetworking/pipeline-ci:1.0.4
         variables:
           Tag: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.Tag'] ] 
           CommitHash: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.CommitHash'] ] 
-        container:
-          image: containernetworking/pipeline-ci:1.0.4
         condition: succeeded('Unit_Tests')
         steps:
           - task: AzureCLI@1
