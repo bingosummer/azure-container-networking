@@ -162,7 +162,7 @@ stages:
   - stage: Cleanup
     dependsOn: ACN_Tests
     jobs:
-      - job: Remote Artifacts
+      - job: RemoteArtifacts
         displayName: Cleanup remote artifacts
         pool:
           name: Networking-ContainerNetworking
