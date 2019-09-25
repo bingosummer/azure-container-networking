@@ -21,7 +21,8 @@ steps:
       rm -f clusterDefinition.json*
       wget '${{ parameters.clusterDefinitionUrl }}' -O clusterDefinition.json
       export CNI_URL='"'https://$(ARTIFACT_STORAGE).blob.core.windows.net/acn-$(CommitHash)/azure-vnet-cni-linux-amd64-$(Tag).tgz'"'
-      sed -i "s|\"${{ parameters.clusterDefinitionCniType }}\":\".*\"|\"${{ parameters.clusterDefinitionCniType }}\":"$CNI_URL"|g" clusterDefinition.json
+      export CNI_TYPE=${{ parameters.clusterDefinitionCniType }}
+      sed -i "s|\"$CNI_TYPE\":\".*\"|\"$CNI_TYPE\":\"$CNI_URL\"|g" clusterDefinition.json
       sed -i "s|\"azureCNIVersion\":\".*\"|\"azureCNIVersion\":\"$(Tag)\"|g" clusterDefinition.json
       echo "Running E2E tests against a cluster built with the following API model:"
       cat ./clusterDefinition.json
