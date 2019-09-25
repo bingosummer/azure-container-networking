@@ -157,9 +157,6 @@ stages:
 
       - job: Cleanup
         displayName: Cleanup remote artifacts
-        dependsOn:
-          - Unit_Tests
-          - E2E_Tests
         pool:
           name: Networking-ContainerNetworking
           demands: agent.os -equals Linux
