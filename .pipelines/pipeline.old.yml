@@ -149,11 +149,52 @@ stages:
               workingDirectory: "$(modulePath)"
             displayName: Create artifact storage container
 
-      - template: e2e-job-template.yaml
-        parameters:
-          name: "ubuntu_16_04_linux_e2e"
-          pipelineBuildImage: "containernetworking/pipeline-ci:1.0.4"
-          testClusterDefinitionUrl: "https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json"
+      - job: E2E_Tests
+        displayName: AKS-Engine E2E Tests
+        dependsOn: Unit_Tests
+        pool:
+          name: Networking-ContainerNetworking
+          demands: agent.os -equals Linux
+        container:
+          image: containernetworking/pipeline-ci:1.0.4
+        variables:
+          GOPATH: "$(System.DefaultWorkingDirectory)/gopath"
+          GOBIN: "$(GOPATH)/bin" # Go binaries path
+          AKS_Engine: "github.com/Azure/aks-engine"
+          modulePath: "$(GOPATH)/src/$(AKS_Engine)"
+          Tag: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.Tag'] ]
+          CommitHash: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.CommitHash'] ]
+
+        steps:
+          - bash: |
+              go version
+              go env
+              go get -v $(AKS_ENGINE)
+              mkdir -p '$(GOBIN)'
+              mkdir -p '$(GOPATH)/pkg'
+              mkdir -p '$(modulePath)'
+              echo '##vso[task.prependpath]$(GOBIN)'
+              echo '##vso[task.prependpath]$(GOROOT)/bin'
+            name: "GoEnv"
+            displayName: "Set up the Go environment"
+
+          - bash: |
+              rm -f cniLinux.json*
+              wget https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json
+              export LINUX_CNI_URL='"'https://$(ARTIFACT_STORAGE).blob.core.windows.net/acn-$(CommitHash)/azure-vnet-cni-linux-amd64-$(Tag).tgz'"'
+              sed -i "s|\"azureCNIURLLinux\":\".*\"|\"azureCNIURLLinux\":"$LINUX_CNI_URL"|g" cniLinux.json
+              sed -i "s|\"azureCNIVersion\":\".*\"|\"azureCNIVersion\":\"$GIT_TAG\"|g" cniLinux.json
+              echo "Running E2E tests against a cluster built with the following API model:"
+              cat ./cniLinux.json
+              curl -L https://dl.k8s.io/v1.16.0/kubernetes-client-linux-amd64.tar.gz | tar xvzf -
+              sudo cp kubernetes/client/bin/kubectl /usr/local/bin/kubectl
+              sudo cp kubernetes/client/bin/kubectl /usr/local/bin/k
+              make bootstrap
+              make build-binary
+              CLUSTER_DEFINITION=./cniLinux.json ORCHESTRATOR=kubernetes CREATE_VNET=false TIMEOUT=10m CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) TENANT_ID=$(AKS_ENGINE_TENANT_ID) SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) CLEANUP_ON_EXIT=true REGIONS=$(AKS_ENGINE_REGION) IS_JENKINS=false make test-kubernetes
+            name: DeployAKSEngine
+            displayName: Deploy AKS Engine
+            workingDirectory: "$(modulePath)"
 
       - job: Cleanup
         displayName: Cleanup remote artifacts
