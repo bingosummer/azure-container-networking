@@ -163,7 +163,7 @@ stages:
     dependsOn: ACN_Tests
     jobs:
       - job: RemoteArtifacts
-        displayName: Cleanup remote artifacts
+        displayName: Delete remote artifacts
         pool:
           name: Networking-ContainerNetworking
           demands: agent.os -equals Linux
