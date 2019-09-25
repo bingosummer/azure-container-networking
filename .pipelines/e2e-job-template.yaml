@@ -5,7 +5,7 @@ parameters:
 
 jobs:
   - job: ${{ parameters.name }}
-    dependsOn: Unit_Tests
+    dependsOn: unit_tests
     pool:
       name: Networking-ContainerNetworking
       demands: agent.os -equals Linux
@@ -15,8 +15,8 @@ jobs:
       GOPATH: "$(System.DefaultWorkingDirectory)/gopath"
       GOBIN: "$(GOPATH)/bin" # Go binaries path
       modulePath: "$(GOPATH)/src/github.com/Azure/aks-engine"
-      Tag: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.Tag'] ]
-      CommitHash: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.CommitHash'] ]
+      Tag: $[ dependencies.unit_tests.outputs['EnvironmentalVariables.Tag'] ]
+      CommitHash: $[ dependencies.unit_tests.outputs['EnvironmentalVariables.CommitHash'] ]
 
     steps:
       - template: e2e-step-template.yaml

@@ -7,14 +7,16 @@ trigger:
       - master
 
 stages:
-  - stage: Tests
-    displayName: Build and Run Tests
+  - stage: ACN Tests
     jobs:
-      - job: Unit_Tests
+      - job: unit_tests
         displayName: Unit Tests
         pool:
           name: Networking-ContainerNetworking
           demands: agent.os -equals Linux
+
+        strategy:
+          parallel: 4
 
         container:
           image: containernetworking/pipeline-ci:1.0.4
@@ -155,6 +157,12 @@ stages:
           pipelineBuildImage: "containernetworking/pipeline-ci:1.0.4"
           testClusterDefinitionUrl: "https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json"
 
+      - template: e2e-job-template.yaml
+        parameters:
+          name: "windows_e2e"
+          pipelineBuildImage: "containernetworking/pipeline-ci:1.0.4"
+          testClusterDefinitionUrl: "https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniWindows.json"
+
       - job: Cleanup
         displayName: Cleanup remote artifacts
         pool:
@@ -163,9 +171,13 @@ stages:
         container:
           image: containernetworking/pipeline-ci:1.0.4
         variables:
-          Tag: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.Tag'] ]
-          CommitHash: $[ dependencies.Unit_Tests.outputs['EnvironmentalVariables.CommitHash'] ]
-        condition: succeeded('Unit_Tests')
+          Tag: $[ dependencies.unit_tests.outputs['EnvironmentalVariables.Tag'] ]
+          CommitHash: $[ dependencies.unit_tests.outputs['EnvironmentalVariables.CommitHash'] ]
+        dependsOn:
+          - unit_tests
+          - ubuntu_16_04_linux_e2e
+          - windows_e2e
+        condition: succeeded('unit_tests')
         steps:
           - task: AzureCLI@1
             inputs:

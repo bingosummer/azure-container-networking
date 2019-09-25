@@ -3,6 +3,7 @@ parameters:
   testClusterDefinitionUrl: ""
 
 steps:
+  - checkout: none
   - bash: |
       go version
       go env
