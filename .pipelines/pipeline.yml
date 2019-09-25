@@ -189,8 +189,8 @@ stages:
               pwd
               ls -lah
               curl -L https://dl.k8s.io/v1.16.0/kubernetes-client-linux-amd64.tar.gz | tar xvzf -
-              sudo cp kubernetes/client/bin/kubectl /usr/local/bin/
-              alias k=kubectl
+              sudo cp kubernetes/client/bin/kubectl /usr/local/bin/kubectl
+              sudo cp kubernetes/client/bin/kubectl /usr/local/bin/k
               make bootstrap
               make build
               CLUSTER_DEFINITION=./cniLinux.json ORCHESTRATOR=kubernetes CREATE_VNET=false TIMEOUT=10m CLIENT_ID=$(AKS_ENGINE_CLIENT_ID) CLIENT_SECRET=$(AKS_ENGINE_CLIENT_SECRET) TENANT_ID=$(AKS_ENGINE_TENANT_ID) SUBSCRIPTION_ID=$(AKS_ENGINE_SUBSCRIPTION_ID) CLEANUP_ON_EXIT=true REGIONS=$(AKS_ENGINE_REGION) IS_JENKINS=false make test-kubernetes
