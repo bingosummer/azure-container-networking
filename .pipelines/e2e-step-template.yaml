@@ -6,7 +6,7 @@ steps:
   - bash: |
       go version
       go env
-      go get -v $(AKS_ENGINE)
+      go get -v github.com/Azure/aks-engine
       mkdir -p '$(GOBIN)'
       mkdir -p '$(GOPATH)/pkg'
       mkdir -p '$(modulePath)'
