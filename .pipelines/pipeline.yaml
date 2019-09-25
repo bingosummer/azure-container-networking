@@ -153,6 +153,8 @@ stages:
           pipelineBuildImage: "containernetworking/pipeline-ci:1.0.4"
           clusterDefinitionUrl: "https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json"
           clusterDefinitionCniType: "azureCNIURLLinux"
+          clusterDefinitionCniBuildOS: "linux"
+          clusterDefinitionCniBuildExt: ".tgz"
 
       - template: e2e-job-template.yaml
         parameters:
@@ -160,6 +162,8 @@ stages:
           pipelineBuildImage: "containernetworking/pipeline-ci:1.0.4"
           clusterDefinitionUrl: "https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniWindows.json"
           clusterDefinitionCniType: "azureCNIURLWindows"
+          clusterDefinitionCniBuildOS: "windows"
+          clusterDefinitionCniBuildExt: ".zip"
 
   - stage: Cleanup
     dependsOn: ACN_Tests

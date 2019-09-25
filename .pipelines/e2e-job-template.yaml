@@ -2,7 +2,9 @@ parameters:
   name: ""
   pipelineBuildImage: "containernetworking/pipeline-ci:1.0.4"
   clusterDefinitionUrl: "https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json"
-  clusterDefinitionCniType: ""
+  clusterDefinitionCniTypeKey: ""
+  clusterDefinitionCniBuildOS: ""
+  clusterDefinitionCniBuildExt: ""
 
 jobs:
   - job: ${{ parameters.name }}
@@ -23,4 +25,6 @@ jobs:
       - template: e2e-step-template.yaml
         parameters:
           clusterDefinitionUrl: ${{ parameters.testClusterDefinitionUrl }}
-          clusterDefinitionCniType: ${{ parameters.cniUrlConfigKeyName }}
+          clusterDefinitionCniTypeKey: ${{ parameters.clusterDefinitionCniTypeKey }}
+          clusterDefinitionCniBuildOS: ${{ parameters.clusterDefinitionCniBuildOS }}
+          clusterDefinitionCniBuildExt: ${{ parameters.clusterDefinitionCniBuildExt }}
