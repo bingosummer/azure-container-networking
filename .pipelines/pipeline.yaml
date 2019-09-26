@@ -165,11 +165,12 @@ stages:
           clusterDefinitionCniBuildOS: "windows"
           clusterDefinitionCniBuildExt: ".zip"
 
-  - stage: Cleanup
-    dependsOn: ACN_Tests
-    jobs:
       - job: RemoteArtifacts
         displayName: Delete remote artifacts
+        dependsOn:
+          - unit_tests
+          - ubuntu_16_04_linux_e2e
+          - windows_e2e
         pool:
           name: Networking-ContainerNetworking
           demands: agent.os -equals Linux
