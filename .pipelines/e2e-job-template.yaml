@@ -24,7 +24,7 @@ jobs:
     steps:
       - template: e2e-step-template.yaml
         parameters:
-          clusterDefinitionUrl: ${{ parameters.testClusterDefinitionUrl }}
+          clusterDefinitionUrl: ${{ parameters.clusterDefinitionUrl }}
           clusterDefinitionCniTypeKey: ${{ parameters.clusterDefinitionCniTypeKey }}
           clusterDefinitionCniBuildOS: ${{ parameters.clusterDefinitionCniBuildOS }}
           clusterDefinitionCniBuildExt: ${{ parameters.clusterDefinitionCniBuildExt }}
