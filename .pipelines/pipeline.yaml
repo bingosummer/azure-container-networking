@@ -7,7 +7,7 @@ trigger:
       - master
 
 stages:
-  - stage: ACN_Tests
+  - stage: build_and_test
     jobs:
       - job: unit_tests
         pool:
@@ -165,12 +165,9 @@ stages:
           clusterDefinitionCniBuildOS: "windows"
           clusterDefinitionCniBuildExt: ".zip"
 
-      - job: RemoteArtifacts
-        displayName: Delete remote artifacts
-        dependsOn:
-          - unit_tests
-          - ubuntu_16_04_linux_e2e
-          - windows_e2e
+  - stage: cleanup
+    jobs:
+      - job: delete_remote_artifacts
         pool:
           name: Networking-ContainerNetworking
           demands: agent.os -equals Linux
