@@ -175,7 +175,7 @@ stages:
           image: containernetworking/pipeline-ci:1.0.4
         variables:
           Tag: $[ dependencies.unit_tests.outputs['EnvironmentalVariables.Tag'] ]
-          CommitHash: $[ dependencies.unit_tests.outputs['EnvironmentalVariables.CommitHash'] ]
+
         steps:
           - checkout: none
           - task: AzureCLI@1
@@ -183,6 +183,7 @@ stages:
               azureSubscription: $(ARTIFACT_SUBSCRIPTION)
               scriptLocation: "inlineScript"
               inlineScript: |
-                az storage container delete -n acn-$(CommitHash) --account-name $(STORAGE_ACCOUNT_NAME)
+                export CommitHash=(git rev-parse HEAD)
+                az storage container delete -n acn-$CommitHash --account-name $(STORAGE_ACCOUNT_NAME)
               workingDirectory: "$(modulePath)"
             displayName: Cleanup remote Azure storage container
