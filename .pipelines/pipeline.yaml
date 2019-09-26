@@ -152,7 +152,7 @@ stages:
           name: "ubuntu_16_04_linux_e2e"
           pipelineBuildImage: "containernetworking/pipeline-ci:1.0.4"
           clusterDefinitionUrl: "https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniLinux.json"
-          clusterDefinitionCniType: "azureCNIURLLinux"
+          clusterDefinitionCniTypeKey: "azureCNIURLLinux"
           clusterDefinitionCniBuildOS: "linux"
           clusterDefinitionCniBuildExt: ".tgz"
 
@@ -161,7 +161,7 @@ stages:
           name: "windows_e2e"
           pipelineBuildImage: "containernetworking/pipeline-ci:1.0.4"
           clusterDefinitionUrl: "https://raw.githubusercontent.com/Azure/azure-container-networking/master/test/e2e/kubernetes/cniWindows.json"
-          clusterDefinitionCniType: "azureCNIURLWindows"
+          clusterDefinitionCniTypeKey: "azureCNIURLWindows"
           clusterDefinitionCniBuildOS: "windows"
           clusterDefinitionCniBuildExt: ".zip"
 
