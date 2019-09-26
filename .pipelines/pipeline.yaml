@@ -176,7 +176,6 @@ stages:
         variables:
           Tag: $[ dependencies.unit_tests.outputs['EnvironmentalVariables.Tag'] ]
           CommitHash: $[ dependencies.unit_tests.outputs['EnvironmentalVariables.CommitHash'] ]
-        condition: succeeded('unit_tests')
         steps:
           - checkout: none
           - task: AzureCLI@1
