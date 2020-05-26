@@ -117,20 +117,8 @@ stages:
             name: "Test"
             displayName: "Run Tests"
 
-          - bash: |
-              export CODECOV_TOKEN=$(CODECOV_TOKEN)
-              bash <(curl -s https://codecov.io/bash)
-              gocov convert coverage.out > coverage.json
-              gocov-xml < coverage.json > coverage.xml
-              echo listing cluster definitions
-              ls $(modulePath)/test/e2e/kubernetes/*
-            workingDirectory: "$(modulePath)"
-            name: "Coverage"
-            displayName: "Generate Coverage Reports"
-            condition: always()
-
           - script: |
-              echo '$(DOCKER_PASSWORD)' | docker login containernetworking.azurecr.io -u '$(DOCKER_USERNAME)' --password-stdin
+              echo '$(DOCKER_PASSWORD)' | docker login binxicontainernetworking.azurecr.io -u '$(DOCKER_USERNAME)' --password-stdin
               docker tag $PUSH_CONTAINER_REGISTRY/azure-npm:$(EnvironmentalVariables.Tag) $PUSH_CONTAINER_REGISTRY/azure-npm:$(EnvironmentalVariables.Tag)-test
               docker push $PUSH_CONTAINER_REGISTRY/azure-npm:$(EnvironmentalVariables.Tag)-test
 
@@ -143,7 +131,7 @@ stages:
                     printf "Attempt $i/$attempts - " && "$@" && break ||  sleep 3 &&  i=$[$i+1] && false
                   done
               }
-              auto-retry docker pull mcr.microsoft.com/containernetworking/azure-npm:$(EnvironmentalVariables.Tag)-test
+              auto-retry docker pull mcr.microsoft.com/binxicontainernetworking/azure-npm:$(EnvironmentalVariables.Tag)-test
             workingDirectory: "$(modulePath)"
             name: "mcrreplication"
             displayName: "Push NPM Image and Wait for MCR"
@@ -153,13 +141,6 @@ stages:
               testRunner: JUnit
               testResultsFiles: $(modulePath)/report.xml
             displayName: "Publish Test Results"
-            condition: always()
-
-          - task: PublishCodeCoverageResults@1
-            inputs:
-              codeCoverageTool: Cobertura
-              summaryFileLocation: $(modulePath)/coverage.xml
-            displayName: "Publish Code Coverage Results"
             condition: always()
 
           - task: CopyFiles@2
